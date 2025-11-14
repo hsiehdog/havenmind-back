@@ -1,6 +1,10 @@
-# AI-Ready Backend
+# HavenMind Backend
 
-TypeScript + Express backend scaffold that combines PostgreSQL/Prisma persistence, Better Auth powered authentication, and the Vercel AI SDK for LLM-powered endpoints. Designed to plug into multiple AI-focused products.
+HavenMind is an AI-powered home maintenance co-pilot that keeps homeowners and property managers organized, maintained, and worry-free. Users upload inspection reports, receipts, or appliance manuals, and the platform extracts key details—systems, service dates, warranty periods—to build a personalized maintenance plan. Upcoming tasks are tracked, reminders fire before something breaks, and every receipt, warranty, and repair becomes part of a searchable Home Journal that feeds into the Home Health Score.
+
+Beyond automation, HavenMind adds simple collaboration flows. Homeowners can assign work to service professionals or tenants, share photos and receipts, track progress, and maintain transparent service records from a single dashboard. Every interaction feeds structured data back into the AI, ensuring the Home Health Score reflects the property’s real-time care.
+
+This repository contains the TypeScript + Express backend that powers HavenMind’s document ingestion, AI reasoning, and collaboration workflows. It exposes authenticated APIs for the web app, handles Better Auth session flows, persists AI sessions and maintenance history via PostgreSQL/Prisma, and integrates the Vercel AI SDK for LLM-backed automation.
 
 ## Tech Stack
 
