@@ -14,13 +14,25 @@ const envSchema = z.object({
     .optional(),
   TRUSTED_ORIGINS: z.string().optional(),
   OPENAI_API_KEY: z.string().min(1, "OPENAI_API_KEY is required"),
-  AI_MODEL: z.string().default("gpt-4o-mini")
+  AI_MODEL: z.string().default("gpt-4o-mini"),
+  AWS_S3_BUCKET: z.string().min(1, "AWS_S3_BUCKET is required"),
+  AWS_S3_REGION: z.string().min(1, "AWS_S3_REGION is required"),
+  AWS_S3_ENDPOINT: z.string().url().optional(),
+  AWS_S3_FORCE_PATH_STYLE: z.enum(["true", "false"]).optional().default("false"),
+  FILE_UPLOAD_MAX_BYTES: z.coerce.number().default(10 * 1024 * 1024),
 });
 
 const env = envSchema.parse(process.env);
 
 export const isProduction = env.NODE_ENV === "production";
 export const appBaseUrl = env.APP_BASE_URL ?? `http://localhost:${env.PORT}`;
+export const s3Config = {
+  bucket: env.AWS_S3_BUCKET,
+  region: env.AWS_S3_REGION,
+  endpoint: env.AWS_S3_ENDPOINT,
+  forcePathStyle: env.AWS_S3_FORCE_PATH_STYLE === "true",
+};
+export const fileUploadMaxBytes = env.FILE_UPLOAD_MAX_BYTES;
 export const trustedOrigins = Array.from(
   new Set(
     [

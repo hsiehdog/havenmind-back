@@ -1,6 +1,9 @@
 -- CreateEnum
 CREATE TYPE "Role" AS ENUM ('USER', 'ADMIN');
 
+-- CreateEnum
+CREATE TYPE "DocumentStatus" AS ENUM ('UPLOADED', 'PROCESSING', 'COMPLETE', 'FAILED');
+
 -- CreateTable
 CREATE TABLE "users" (
     "id" TEXT NOT NULL,
@@ -72,6 +75,23 @@ CREATE TABLE "auth_verifications" (
     CONSTRAINT "auth_verifications_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "documents" (
+    "id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "original_name" TEXT NOT NULL,
+    "mime_type" TEXT NOT NULL,
+    "size" INTEGER NOT NULL,
+    "bucket" TEXT NOT NULL,
+    "storage_key" TEXT NOT NULL,
+    "url" TEXT,
+    "status" "DocumentStatus" NOT NULL DEFAULT 'UPLOADED',
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "documents_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
@@ -84,6 +104,9 @@ CREATE UNIQUE INDEX "auth_sessions_token_key" ON "auth_sessions"("token");
 -- CreateIndex
 CREATE UNIQUE INDEX "auth_accounts_provider_id_account_id_key" ON "auth_accounts"("provider_id", "account_id");
 
+-- CreateIndex
+CREATE INDEX "documents_user_id_created_at_idx" ON "documents"("user_id", "created_at");
+
 -- AddForeignKey
 ALTER TABLE "ai_sessions" ADD CONSTRAINT "ai_sessions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -92,3 +115,6 @@ ALTER TABLE "auth_sessions" ADD CONSTRAINT "auth_sessions_user_id_fkey" FOREIGN 
 
 -- AddForeignKey
 ALTER TABLE "auth_accounts" ADD CONSTRAINT "auth_accounts_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "documents" ADD CONSTRAINT "documents_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;

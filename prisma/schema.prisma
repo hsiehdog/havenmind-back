@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
 }
 
 enum Role {
@@ -24,6 +24,7 @@ model User {
   aiSessions    AiSession[]
   authSessions  AuthSession[]
   accounts      AuthAccount[]
+  documents     Document[]
 
   @@map("users")
 }
@@ -84,4 +85,29 @@ model AuthVerification {
   updatedAt  DateTime @updatedAt @map("updated_at")
 
   @@map("auth_verifications")
+}
+
+enum DocumentStatus {
+  UPLOADED
+  PROCESSING
+  COMPLETE
+  FAILED
+}
+
+model Document {
+  id           String          @id @default(cuid())
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String          @map("user_id")
+  originalName String          @map("original_name")
+  mimeType     String          @map("mime_type")
+  size         Int
+  bucket       String
+  storageKey   String          @map("storage_key")
+  url          String?
+  status       DocumentStatus  @default(UPLOADED)
+  createdAt    DateTime        @default(now()) @map("created_at")
+  updatedAt    DateTime        @updatedAt @map("updated_at")
+
+  @@index([userId, createdAt])
+  @@map("documents")
 }

@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express";
+import { MulterError } from "multer";
 
 export class ApiError extends Error {
   statusCode: number;
@@ -17,6 +18,18 @@ export const notFoundHandler = (_req: Request, _res: Response, next: NextFunctio
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const errorHandler = (error: Error | ApiError, _req: Request, res: Response, _next: NextFunction): void => {
+  if (error instanceof MulterError) {
+    const status = error.code === "LIMIT_FILE_SIZE" ? 413 : 400;
+    res.status(status).json({
+      message: error.code === "LIMIT_FILE_SIZE" ? "File exceeds size limit" : error.message,
+      details: {
+        code: error.code,
+        field: error.field,
+      },
+    });
+    return;
+  }
+
   const status = (error as ApiError).statusCode ?? 500;
   const payload = {
     message: error.message || "Internal server error",

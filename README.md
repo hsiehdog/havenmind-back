@@ -54,8 +54,25 @@ This repository contains the TypeScript + Express backend that powers HavenMind�
 | POST   | `/users/me/change-password` | Calls Better Auth `changePassword` to rotate credentials                       | Better Auth session cookie |
 | POST   | `/ai/generate`              | Accepts `{ "prompt": string }` and streams an LLM response persisted to the DB | Better Auth session cookie |
 | POST   | `/users/sign-out`           | Revokes the current Better Auth session and clears cookies                     | Better Auth session cookie |
+| GET    | `/documents`                | Lists the latest uploaded documents for the authenticated user                 | Better Auth session cookie |
+| POST   | `/documents`                | `multipart/form-data` endpoint that uploads `file` to S3 and stores metadata   | Better Auth session cookie |
+| GET    | `/documents/:id/url`        | Returns a short-lived pre-signed URL so the user can view their document       | Better Auth session cookie |
 
 Better Auth issues HTTP-only cookies (`better-auth.session_token`, etc.) that the frontend must forward on every request to protected routes. Non-browser clients can store the session cookie manually and send it via the `Cookie` header. The profile/password endpoints above simply proxy Better Auth's stock [`updateUser`](https://www.better-auth.com/docs/concepts/users-accounts) and `changePassword` handlers so password hashing and audit trails remain centralized.
+
+### File storage configuration
+
+- `AWS_S3_BUCKET`, `AWS_S3_REGION`, `AWS_ACCESS_KEY_ID`, and `AWS_SECRET_ACCESS_KEY` configure the credentials the backend uses to upload files. Provide `AWS_S3_ENDPOINT` and set `AWS_S3_FORCE_PATH_STYLE=true` when targeting services like LocalStack or MinIO.
+- `FILE_UPLOAD_MAX_BYTES` defines the maximum payload the API will accept (default 10 MB). Requests exceeding the limit return `413`.
+- Viewing a document requires hitting `GET /documents/:id/url`, which verifies the user owns the file and mints a pre-signed GET URL that expires after roughly two minutes.
+- Uploaded document metadata lives in the Prisma model `Document`. Run `pnpm prisma:generate` and `pnpm prisma:migrate` after pulling schema changes.
+
+### File uploads
+
+1. The frontend calls `POST /documents` with a `file` field (PDF/DOC/DOCX/images). The Express route streams the binary via Multer's in-memory storage.
+2. `fileService` validates MIME types, creates an S3 key scoped to the user, uploads the buffer using `@aws-sdk/client-s3`, and persists metadata (name, size, content type, bucket, key, status) through Prisma.
+3. `GET /documents` returns the 50 most recent entries for the authenticated user so the dashboard can surface receipts/manuals inside the Home Journal card.
+4. When a user clicks “View”, the frontend calls `GET /documents/:id/url`. The API re-checks ownership, generates a short-lived pre-signed URL via AWS SDK, and the browser downloads the file using that signed URL.
 
 ### Endpoint Inputs & Outputs
 
